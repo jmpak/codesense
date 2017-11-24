@@ -1,0 +1,60 @@
+#!/bin/bash
+
+function index() {
+  dir=`realpath $1`
+  ls -l $1 | awk 'NF>2{printf "%s/%s ",dir, $NF ; system("linguist "dir"/"$NF" | sed -n 1p "); printf " \n" }' dir=$dir 2>/dev/null | awk 'NF' > ~/.langified
+}
+
+function color_print() {
+  case "$0" in
+    Java)
+          color=208 
+          ;;
+    Clojure)
+          color=2
+          ;;
+    Ruby)
+          color=1
+          ;;
+    Go)
+          color=4
+          ;;
+    JavaScript)
+          color=226
+          ;;
+    *)
+          color=255
+  esac
+  echo -n "$1 " ; tput setaf $color ; echo "$0" ; tput op
+}
+
+export -f color_print
+
+function get_lang() {
+  while read file rest; do
+    cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf $3; }}' | xargs -I {} bash -c 'color_print "$*"' {} $rest
+  done  
+}
+
+# awk '/auth_service/ {print $3}'
+function list() {
+  dir=`realpath $1`
+  ls -l $1 | awk 'NF>2{printf "%s/%s %s\n", dir, $NF, $0}' dir=$dir | get_lang
+}
+
+### main logic ###
+path=${2:-.}
+case "$1" in
+  index)
+        index $path
+        ;;
+  list)
+        list $path
+        ;;
+  *)
+        echo $"Usage: $(basename $0) {index|list} <path>"
+        exit 1
+esac
+
+exit 0
+

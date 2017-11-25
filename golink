@@ -1,7 +1,8 @@
 #!/bin/bash
 
 function create_link() {
-  read file lang
+  lang=$0
+  file=$1
   case "$lang" in
     Go)
         ln -sf $file $GOPATH/src/$(basename $file)
@@ -12,15 +13,15 @@ function create_link() {
 export -f create_link
 
 function get_lang() {
-  file=$1
-  cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf "%s %s\n", file, $3; }}' | create_link
+  read file
+  cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf $3; }}' | xargs -I {} bash -c 'create_link "$*"' {} $file
 }
 
 export -f get_lang
 
 function process() {
   while read file; do
-    echo $file | awk 'NF>2{printf "%s/%s\n", dir, $NF}' dir=$1 | xargs -I {} bash -c 'get_lang {}'
+    echo $file | awk 'NF>2{printf "%s/%s\n", dir, $NF}' dir=$1 | get_lang
   done
 }
 
@@ -38,4 +39,3 @@ fi
 _golink $1
 
 exit 0
-

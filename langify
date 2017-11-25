@@ -31,15 +31,20 @@ function color_print() {
 export -f color_print
 
 function get_lang() {
-  while read file rest; do
-    cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf $3; }}' | xargs -I {} bash -c 'color_print "$*"' {} $rest
-  done  
+  read file rest
+  cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf $3; }}' | xargs -I {} bash -c 'color_print "$*"' {} $rest
+}
+
+function process_list() {
+  while read line; do
+    echo $line | get_lang
+  done
 }
 
 # awk '/auth_service/ {print $3}'
 function list() {
   dir=`realpath $1`
-  ls -l $1 | awk 'NF>2{printf "%s/%s %s\n", dir, $NF, $0}' dir=$dir | get_lang
+  ls -l $1 | awk 'NF>2{printf "%s/%s %s\n", dir, $NF, $0}' dir=$dir | process_list
 }
 
 ### main logic ###

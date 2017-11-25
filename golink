@@ -1,0 +1,41 @@
+#!/bin/bash
+
+function create_link() {
+  read file lang
+  case "$lang" in
+    Go)
+        ln -sf $file $GOPATH/src/$(basename $file)
+        ;;
+  esac
+}
+
+export -f create_link
+
+function get_lang() {
+  file=$1
+  cat ~/.langified | awk -v file="$file "  '{if ( $0 ~ file ) { printf "%s %s\n", file, $3; }}' | create_link
+}
+
+export -f get_lang
+
+function process() {
+  while read file; do
+    echo $file | awk 'NF>2{printf "%s/%s\n", dir, $NF}' dir=$1 | xargs -I {} bash -c 'get_lang {}'
+  done
+}
+
+function _golink() {
+  dir=`realpath $1`
+  ls -l $1 | process $dir
+}
+
+### main logic ###
+if [ -z "$1" ]
+  then 
+    echo $"Usage: $(basename $0) <path>"
+fi
+
+_golink $1
+
+exit 0
+
